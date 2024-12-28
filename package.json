@@ -1,7 +1,19 @@
 {
+  "name": "water-eye-care-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot for sending notifications about water and eye care.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "node-schedule": "^2.1.1"
-  }
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "Onur",
+  "license": "MIT"
 }
