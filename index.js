@@ -5,12 +5,13 @@ require('dotenv').config();
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CHAT_ID = process.env.CHAT_ID;
 
-let notificationsActive = false; // Notification status
+let notificationsActive = false; // Bildirim durumu
+let lastUpdateId = 0; // İşlenmiş son mesajın ID'si
 
-// Telegram API URL
+// Telegram API URL'si
 const TELEGRAM_API_URL = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
-//Message Sending Function
+// Mesaj Gönderme Fonksiyonu
 async function sendTelegramMessage(message) {
   const url = `${TELEGRAM_API_URL}/sendMessage`;
   const params = {
@@ -26,7 +27,7 @@ async function sendTelegramMessage(message) {
   }
 }
 
-// Listening to Messages Function
+// Mesajları Dinleme Fonksiyonu
 async function getUpdates() {
   const url = `${TELEGRAM_API_URL}/getUpdates`;
 
@@ -35,14 +36,22 @@ async function getUpdates() {
     const updates = response.data.result;
 
     updates.forEach((update) => {
-      const messageText = update.message?.text;
+      // Yalnızca yeni mesajları işleyin
+      if (update.update_id > lastUpdateId) {
+        lastUpdateId = update.update_id; // İşlenen son mesajın ID'sini güncelleyin
+        const messageText = update.message?.text;
 
-      if (messageText === '/start' || messageText === '/baslat') {
-        notificationsActive = true;
-        sendTelegramMessage('Bildirimler başlatıldı! 💧');
-      } else if (messageText === '/stop' || messageText === '/durdur') {
-        notificationsActive = false;
-        sendTelegramMessage('Bildirimler durduruldu! 🚫');
+        if (messageText === '/start' || messageText === '/baslat') {
+          if (!notificationsActive) {
+            notificationsActive = true;
+            sendTelegramMessage('Bildirimler başlatıldı! 💧');
+          }
+        } else if (messageText === '/stop' || messageText === '/durdur') {
+          if (notificationsActive) {
+            notificationsActive = false;
+            sendTelegramMessage('Bildirimler durduruldu! 🚫');
+          }
+        }
       }
     });
   } catch (error) {
@@ -50,7 +59,7 @@ async function getUpdates() {
   }
 }
 
-// Notification Timers
+// Bildirim Zamanlayıcıları
 schedule.scheduleJob('0 * * * *', () => {
   if (notificationsActive) {
     sendTelegramMessage('Saat başı hatırlatma: Kendine dikkat et ve su iç! 💧');
@@ -63,6 +72,6 @@ schedule.scheduleJob('*/30 * * * *', () => {
   }
 });
 
-// Run Bot
-setInterval(getUpdates, 3000); // Check for new messages every 3 seconds
+// Botu Çalıştır
+setInterval(getUpdates, 3000); // Her 3 saniyede bir yeni mesajları kontrol et
 console.log('Bot çalışıyor...');
